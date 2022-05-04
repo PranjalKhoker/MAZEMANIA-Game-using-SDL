@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = 39_tiling.cpp
+OBJS = game.cpp
 
 #CC specifies which compiler we're using
 CC = g++
