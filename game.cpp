@@ -105,11 +105,11 @@ class Dot
 {
     public:
 		//The dimensions of the dot
-		static const int DOT_WIDTH = 14;
-		static const int DOT_HEIGHT = 14;
+		static const int DOT_WIDTH = 16;
+		static const int DOT_HEIGHT = 16;
 
 		//Maximum axis velocity of the dot
-		static const int DOT_VEL = 10;
+		static const int DOT_VEL = 6;
 
 		//Initializes the variables
 		Dot();
@@ -348,8 +348,8 @@ SDL_Rect Tile::getBox()
 Dot::Dot()
 {
     //Initialize the collision box
-    mBox.x = 128;
-    mBox.y = 0;
+    mBox.x = 1888;
+    mBox.y = 32;
 	mBox.w = DOT_WIDTH;
 	mBox.h = DOT_HEIGHT;
 
@@ -506,7 +506,7 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 	bool success = true;
 
 	//Load dot texture
-	if( !gDotTexture.loadFromFile( "player.png" ) )
+	if( !gDotTexture.loadFromFile( "playern.png" ) )
 	{
 		printf( "Failed to load dot texture!\n" );
 		success = false;
