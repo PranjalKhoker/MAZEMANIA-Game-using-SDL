@@ -288,7 +288,7 @@ void LTexture::setAlpha( Uint8 alpha )
 void LTexture::render( int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip )
 {
 	//Set rendering space and render to screen
-	SDL_Rect renderQuad = { x, y, mWidth, mHeight };
+	SDL_Rect renderQuad = { x, y, 32, 32 };
 
 	//Set clip rendering dimensions
 	if( clip != NULL )
@@ -506,7 +506,7 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 	bool success = true;
 
 	//Load dot texture
-	if( !gDotTexture.loadFromFile( "dot.bmp" ) )
+	if( !gDotTexture.loadFromFile( "player.png" ) )
 	{
 		printf( "Failed to load dot texture!\n" );
 		success = false;
