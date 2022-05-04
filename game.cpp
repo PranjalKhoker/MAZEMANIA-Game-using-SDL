@@ -4,6 +4,7 @@ and may not be redistributed without written permission.*/
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "SDL_mixer.h"
 #include <stdio.h>
 #include <string>
 #include <fstream>
@@ -23,6 +24,8 @@ const int LAYER1_TOTAL_TILES = 80000;
 const int LAYER2_TOTAL_TILES = 80000;
 
 const int TOTAL_TILE_SPRITES = 16384;
+
+Mix_Music *gMusic = NULL;
 
 //The different tile sprites
 
@@ -443,7 +446,7 @@ bool init()
 	bool success = true;
 
 	//Initialize SDL
-	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+	if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0  )
 	{
 		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
 		success = false;
@@ -458,6 +461,12 @@ bool init()
 
 		//Create window
 		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+                {
+                    printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+                    success = false;
+                }
+                
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -502,7 +511,14 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 		printf( "Failed to load dot texture!\n" );
 		success = false;
 	}
-
+	
+	gMusic = Mix_LoadMUS( "Fluffing-a-Duck.wav" );
+    if( gMusic == NULL )
+    {
+        printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+        success = false;
+    }
+	
 	//Load tile texture
 	if( !gTileTexture.loadFromFile( "mytileset.png" ) )
 	{
@@ -544,6 +560,8 @@ void close( Tile* tiles[], Tile* tiles2[] )
 	//Free loaded images
 	gDotTexture.free();
 	gTileTexture.free();
+	Mix_FreeMusic( gMusic );
+    gMusic = NULL;
 
 	//Destroy window	
 	SDL_DestroyRenderer( gRenderer );
@@ -827,6 +845,28 @@ int main( int argc, char* args[] )
 					if( e.type == SDL_QUIT )
 					{
 						quit = true;
+					}
+					if(e.type == SDL_KEYDOWN){
+						if(e.key.keysym.sym == SDLK_p){
+							if(Mix_PlayingMusic()==0){
+								Mix_PlayMusic(gMusic, -1);
+							}
+							else{
+								if( Mix_PausedMusic() == 1 )
+                                {
+                                    //Resume the music
+                                    Mix_ResumeMusic();
+                                }
+                                //If the music is playing
+                                else
+                                {
+                                    //Pause the music
+                                    Mix_PauseMusic();
+                                }
+							}
+						}
+					}else if(e.key.keysym.sym == SDLK_o){
+						 Mix_HaltMusic();
 					}
 
 					//Handle input for the dot
