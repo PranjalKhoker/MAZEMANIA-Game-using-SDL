@@ -460,7 +460,7 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "IITD GAME", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN );
 		if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
                 {
                     printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -845,8 +845,11 @@ int main( int argc, char* args[] )
 					if( e.type == SDL_QUIT )
 					{
 						quit = true;
-					}
+					}					
 					if(e.type == SDL_KEYDOWN){
+						if(e.key.keysym.sym == SDLK_ESCAPE){
+							quit = true;
+						} else
 						if(e.key.keysym.sym == SDLK_p){
 							if(Mix_PlayingMusic()==0){
 								Mix_PlayMusic(gMusic, -1);
