@@ -14,14 +14,14 @@ const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
 
 //The dimensions of the level
-const int LEVEL_WIDTH = 12800;
-const int LEVEL_HEIGHT = 6400;
+const int LEVEL_WIDTH = 6400;
+const int LEVEL_HEIGHT = 3200;
 
 //Tile constants
 const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
-const int LAYER1_TOTAL_TILES = 80000;
-const int LAYER2_TOTAL_TILES = 80000;
+const int LAYER1_TOTAL_TILES = 20000;
+const int LAYER2_TOTAL_TILES = 20000;
 
 const int TOTAL_TILE_SPRITES = 16384;
 
@@ -348,7 +348,7 @@ SDL_Rect Tile::getBox()
 Dot::Dot()
 {
     //Initialize the collision box
-    mBox.x = 1888;
+    mBox.x = 4448;
     mBox.y = 32;
 	mBox.w = DOT_WIDTH;
 	mBox.h = DOT_HEIGHT;
@@ -628,7 +628,7 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
     int x = 0, y = 0;
 
     //Open the map
-    std::ifstream map1( "mapt1.map" );
+    std::ifstream map1( "xxm1.map" );
 
     //If the map couldn't be loaded
     if( map1.fail() )
@@ -688,11 +688,11 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 		//Close the file
 		
 	}	
-		//map1.close();
+		map1.close();
 		x = 0, y = 0;
-		//std::ifstream map2( "xyz_2.map" );
+		std::ifstream map2( "xxm2.map" );
 		
-		if( map1.fail() )
+		if( map2.fail() )
     {
 		printf( "Unable to load map file!\n" );
 		tilesLoaded = false;
@@ -706,10 +706,10 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 			int tile2Type = -1;
 
 			//Read tile from map file
-			map1 >> tile2Type;
+			map2 >> tile2Type;
 
 			//If the was a problem in reading the map
-			if( map1.fail() )
+			if( map2.fail() )
 			{
 				//Stop loading map
 				printf( "Error loading map: Unexpected end of file!\n" );
@@ -746,7 +746,7 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 		}
 		
 		//Close the file
-		map1.close();		
+		map2.close();		
 		
 		//Clip the sprite sheet
 		
@@ -789,7 +789,7 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
    for( int i = 0; i < LAYER1_TOTAL_TILES; ++i )
     {
         //If the tile is a wall type tile
-        if( ( tiles[ i ]->getType() ==  897)  )
+        if( ( tiles[ i ]->getType() ==  513)  )
         {
             //If the collision box touches the wall tile
             if( checkCollision( box, tiles[ i ]->getBox() ) )
