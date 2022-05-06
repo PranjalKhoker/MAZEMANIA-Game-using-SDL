@@ -172,6 +172,7 @@ LTexture gDotTexture;
 LTexture gTileTexture;
 LTexture gTextTexture;
 LTexture gStartScreen;
+LTexture gInstructionScreen;
 
 TTF_Font *gFont = NULL;
 
@@ -551,6 +552,10 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 		printf("Failed to load Start screen Texture!\n");
 		success = false;
 	}
+	if(!gInstructionScreen.loadFromFile("Images/instructions.jpg")){
+		printf("Failed to load Start screen Texture!\n");
+		success = false;
+	}
 
 	//Load dot texture
 	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
@@ -611,6 +616,7 @@ void close( Tile* tiles[], Tile* tiles2[] )
 	//Free loaded images
 	gDotTexture.free();
 	gStartScreen.free();
+	gInstructionScreen.free();
 	gTileTexture.free();
 	Mix_FreeMusic( gMusic );
     gMusic = NULL;
@@ -970,18 +976,21 @@ void play (Tile* tileSet[], Tile* tileSet2[]) {
 }
 
 bool isPlaying = false;
-
+bool isInstructions = false;
 bool isGameQuit = false;
+bool isBackToStart  = false;
 
 void start(){
 	
-	
+	bool wasMusic = false;
 	SDL_Event e;
+	isBackToStart = false;
 	while(1){
 		while( SDL_PollEvent( &e ) != 0 )
 		{
-			if(Mix_PlayingMusic()==0){
+			if(Mix_PlayingMusic()==0 && !wasMusic){
 				Mix_PlayMusic(gMusic, -1);
+				wasMusic = true;
 			}
 			if( e.type == SDL_QUIT )
 			{
@@ -989,14 +998,36 @@ void start(){
 				return;
 			}	
 			if(e.type == SDL_KEYDOWN){
+			
+
 				if(e.key.keysym.sym == SDLK_ESCAPE){
-					isGameQuit = true;
-					return;
+						isGameQuit = true;
+						return;
 				}
+				
 				if(e.key.keysym.sym == SDLK_SPACE){
 					isPlaying = true;
 					return;
 				}
+				
+				if(e.key.keysym.sym == SDLK_i){
+					isInstructions = true;
+					return;
+				}
+				
+				if(e.key.keysym.sym == SDLK_s){
+						if( Mix_PausedMusic() == 1 )
+		                {
+		                    //Resume the music
+		                    Mix_ResumeMusic();
+		                }
+		                //If the music is playing
+		               
+					}
+				}
+			else if(e.key.keysym.sym == SDLK_m){
+				 Mix_HaltMusic();
+				 wasMusic = false;
 			}
 		}
 		
@@ -1014,6 +1045,65 @@ void start(){
 	}
 }
 
+
+void instructions() {
+	bool wasMusic = false;
+	SDL_Event e;
+	
+	while(1)
+	{
+		while( SDL_PollEvent( &e ) != 0 )
+		{
+			if(Mix_PlayingMusic()==0 && !wasMusic){
+				Mix_PlayMusic(gMusic, -1);
+				wasMusic = true;
+			}
+			
+			if( e.type == SDL_QUIT )
+			{
+				isGameQuit = true;
+				return;
+			}
+			if(e.type == SDL_KEYDOWN){
+		
+
+				if(e.key.keysym.sym == SDLK_ESCAPE){
+						isGameQuit = true;
+						return;
+				}
+				
+				if(e.key.keysym.sym == SDLK_BACKSPACE ){
+					isBackToStart = true;
+					return;
+				}
+							
+				if(e.key.keysym.sym == SDLK_s){
+						if( Mix_PausedMusic() == 1 )
+			            {
+			                //Resume the music
+			                Mix_ResumeMusic();
+			            }
+			            //If the music is playing
+			           
+					}
+				}
+			else if(e.key.keysym.sym == SDLK_m){
+				 Mix_HaltMusic();
+				 wasMusic = false;
+			}
+				
+				
+				
+			}
+			
+			SDL_Rect clip = {0,0,1200,904};
+
+			gInstructionScreen.render(0,0, &clip);
+		
+			SDL_RenderPresent( gRenderer );	
+		}
+		
+}
 
 
 
@@ -1037,16 +1127,30 @@ int main( int argc, char* args[] )
 		}
 		else
 		{	
-			start();
+			
+			//Main loop flag
+			
+			
+			while(!isPlaying && !isGameQuit){
+			
+				start();
 
-		
+				if(isInstructions && !isGameQuit && !isPlaying){
+					instructions();
+				}
+			}
+			
+			
 			if(isPlaying && !isGameQuit){
 				play(tileSet, tileSet2);
 			}
+			
+			
 		}
 		
 		//Free resources and close SDL
 		close( tileSet , tileSet2);
+		
 		
 	}
 
