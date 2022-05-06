@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
+
 #include <bits/stdc++.h>
+using namespace std;
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 640;
@@ -24,6 +26,13 @@ const int LAYER1_TOTAL_TILES = 20000;
 const int LAYER2_TOTAL_TILES = 20000;
 
 const int TOTAL_TILE_SPRITES = 16384;
+
+int PlayerSpeed = 5;
+int player_xpos = 4448;
+int player_ypos = 32;
+bool hasBoosted = false;
+
+
 
 Mix_Music *gMusic = NULL;
 
@@ -109,7 +118,7 @@ class Dot
 		static const int DOT_HEIGHT = 16;
 
 		//Maximum axis velocity of the dot
-		static const int DOT_VEL = 6;
+		int DOT_VEL = 6;
 
 		//Initializes the variables
 		Dot();
@@ -118,7 +127,7 @@ class Dot
 		void handleEvent( SDL_Event& e );
 
 		//Moves the dot and check collision against tiles
-		void move( Tile *tiles[] );
+		void move( Tile *tiles[] , Tile *tiles2[]);
 
 		//Centers the camera over the dot
 		void setCamera( SDL_Rect& camera );
@@ -382,18 +391,19 @@ void Dot::handleEvent( SDL_Event& e )
         //Adjust the velocity
         switch( e.key.keysym.sym )
         {
-            case SDLK_UP: mVelY += DOT_VEL; break;
-            case SDLK_DOWN: mVelY -= DOT_VEL; break;
-            case SDLK_LEFT: mVelX += DOT_VEL; break;
-            case SDLK_RIGHT: mVelX -= DOT_VEL; break;
+            case SDLK_UP: mVelY = 0; break;
+            case SDLK_DOWN: mVelY = 0; break;
+            case SDLK_LEFT: mVelX = 0; break;
+            case SDLK_RIGHT: mVelX = 0; break;
         }
     }
 }
 
-void Dot::move( Tile *tiles[] )
+void Dot::move( Tile *tiles[] , Tile *tiles2[])
 {
     //Move the dot left or right
     mBox.x += mVelX;
+    player_xpos = mBox.x;
 
     //If the dot went too far to the left or right or touched a wall
     if( ( mBox.x < 0 ) || ( mBox.x + DOT_WIDTH > LEVEL_WIDTH ) || touchesWall( mBox, tiles ) )
@@ -404,12 +414,27 @@ void Dot::move( Tile *tiles[] )
 
     //Move the dot up or down
     mBox.y += mVelY;
+    player_ypos = mBox.y;
 
     //If the dot went too far up or down or touched a wall
     if( ( mBox.y < 0 ) || ( mBox.y + DOT_HEIGHT > LEVEL_HEIGHT ) || touchesWall( mBox, tiles ) )
     {
         //move back
         mBox.y -= mVelY;
+    }
+    
+    if(!hasBoosted){
+    for (int i=0;i<TOTAL_TILE_SPRITES;i++){
+    	if (tiles2[i]->getType() <= 3670 && tiles2[i]->getType() >= 3668){
+    		if(checkCollision(mBox,tiles2[i]->getBox())){
+    			
+    			DOT_VEL = 10;
+    			PlayerSpeed = DOT_VEL;
+    			hasBoosted  = true;
+    		}
+    	}
+    
+    }
     }
 }
 
@@ -525,7 +550,7 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 	//Load dot texture
 	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
 	{
-		printf( "Failed to load dot texture!\n" );
+		printf( "Failed to load character texture!\n" );
 		success = false;
 	}
 	
@@ -886,7 +911,7 @@ int main( int argc, char* args[] )
 				}
 
 				//Move the dot
-				dot.move( tileSet );
+				dot.move( tileSet, tileSet2 );
 				dot.setCamera( camera );
 
 				//Clear screen
@@ -925,6 +950,26 @@ int main( int argc, char* args[] )
 				gTextTexture.loadFromRenderedText( "M - Mute", textColor );
 
 				gTextTexture.render( 550,  50);
+				
+				
+				///
+				string s = "SPEED : " + to_string(PlayerSpeed);
+				
+				gTextTexture.loadFromRenderedText( s, textColor );
+
+				gTextTexture.render( 0,  0);
+				
+				s = "X : " + to_string(player_xpos);
+				
+				gTextTexture.loadFromRenderedText( s, textColor );
+
+				gTextTexture.render( 0,  25);
+				
+				s = "Y : " + to_string(player_ypos);
+				
+				gTextTexture.loadFromRenderedText( s, textColor );
+
+				gTextTexture.render( 0,  50);
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
