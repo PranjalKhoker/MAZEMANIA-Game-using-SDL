@@ -2,14 +2,16 @@
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include "SDL_Files/SDL_mixer.h"
 #include <stdio.h>
 #include <string>
 #include <fstream>
+#include <bits/stdc++.h>
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 1280;
-const int SCREEN_HEIGHT = 960;
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
 
 //The dimensions of the level
 const int LEVEL_WIDTH = 6400;
@@ -159,6 +161,10 @@ SDL_Renderer* gRenderer = NULL;
 //Scene textures
 LTexture gDotTexture;
 LTexture gTileTexture;
+LTexture gTextTexture;
+
+TTF_Font *gFont = NULL;
+
 SDL_Rect gTileClips[ TOTAL_TILE_SPRITES ];
 
 LTexture::LTexture()
@@ -286,7 +292,7 @@ void LTexture::setAlpha( Uint8 alpha )
 void LTexture::render( int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip )
 {
 	//Set rendering space and render to screen
-	SDL_Rect renderQuad = { x, y, 32, 32 };
+	SDL_Rect renderQuad = { x, y, mWidth,mHeight };
 
 	//Set clip rendering dimensions
 	if( clip != NULL )
@@ -465,6 +471,12 @@ bool init()
                     success = false;
                 }
                 
+        if( TTF_Init() == -1 )
+                {
+                    printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
+                    success = false;
+                }
+               
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -502,6 +514,13 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 {
 	//Loading success flag
 	bool success = true;
+
+	gFont = TTF_OpenFont( "Fonts/AngryBirds.ttf", 20);
+	if( gFont == NULL )
+    {
+        printf( "Failed to load Angry Birds font! SDL_ttf Error: %s\n", TTF_GetError() );
+        success = false;
+    }
 
 	//Load dot texture
 	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
@@ -555,6 +574,10 @@ void close( Tile* tiles[], Tile* tiles2[] )
 		 }
 	}
 
+	gTextTexture.free();
+	TTF_CloseFont( gFont );
+    gFont = NULL;
+
 	//Free loaded images
 	gDotTexture.free();
 	gTileTexture.free();
@@ -568,6 +591,7 @@ void close( Tile* tiles[], Tile* tiles2[] )
 	gRenderer = NULL;
 
 	//Quit SDL subsystems
+	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
 }
@@ -758,20 +782,7 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 				gTileClips[i].w = TILE_WIDTH;
 				gTileClips[i].h = TILE_HEIGHT;
 			}
-			/*gTileClips[ TILE_GRASS ].x = 0;
-			gTileClips[ TILE_GRASS ].y = 0;
-			gTileClips[ TILE_GRASS ].w = TILE_WIDTH;
-			gTileClips[ TILE_GRASS ].h = TILE_HEIGHT;
-
-			gTileClips[ TILE_ROAD ].x = 64;
-			gTileClips[ TILE_ROAD ].y = 0;
-			gTileClips[ TILE_ROAD ].w = TILE_WIDTH;
-			gTileClips[ TILE_ROAD ].h = TILE_HEIGHT;
 			
-			gTileClips[ TILE_STONES ].x = 0;
-			gTileClips[ TILE_STONES ].y = 64;
-			gTileClips[ TILE_STONES ].w = TILE_WIDTH;
-			gTileClips[ TILE_STONES ].h = TILE_HEIGHT;*/
 
 		}
 
@@ -848,7 +859,7 @@ int main( int argc, char* args[] )
 						if(e.key.keysym.sym == SDLK_ESCAPE){
 							quit = true;
 						} else
-						if(e.key.keysym.sym == SDLK_p){
+						if(e.key.keysym.sym == SDLK_s){
 							if(Mix_PlayingMusic()==0){
 								Mix_PlayMusic(gMusic, -1);
 							}
@@ -866,7 +877,7 @@ int main( int argc, char* args[] )
                                 }
 							}
 						}
-					}else if(e.key.keysym.sym == SDLK_o){
+					}else if(e.key.keysym.sym == SDLK_m){
 						 Mix_HaltMusic();
 					}
 
@@ -898,6 +909,22 @@ int main( int argc, char* args[] )
 
 				//Render dot
 				dot.render( camera );
+
+				SDL_Color textColor = { 255,255, 255};
+				
+				//string s = "Score: " + to_string(dot.Score);
+				//cout << Score << endl;
+				gTextTexture.loadFromRenderedText( "ESC - Quit", textColor );
+
+				gTextTexture.render( 550,  0 );
+				
+				gTextTexture.loadFromRenderedText( "S - Sound", textColor );
+
+				gTextTexture.render( 550,  25 );
+
+				gTextTexture.loadFromRenderedText( "M - Mute", textColor );
+
+				gTextTexture.render( 550,  50);
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
