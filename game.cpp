@@ -2,7 +2,7 @@
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "SDL_mixer.h"
+#include "SDL_Files/SDL_mixer.h"
 #include <stdio.h>
 #include <string>
 #include <fstream>
@@ -504,13 +504,13 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 	bool success = true;
 
 	//Load dot texture
-	if( !gDotTexture.loadFromFile( "playern.png" ) )
+	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
 	{
 		printf( "Failed to load dot texture!\n" );
 		success = false;
 	}
 	
-	gMusic = Mix_LoadMUS( "Fluffing-a-Duck.wav" );
+	gMusic = Mix_LoadMUS( "Sounds/Fluffing-a-Duck.wav" );
     if( gMusic == NULL )
     {
         printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -518,7 +518,7 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
     }
 	
 	//Load tile texture
-	if( !gTileTexture.loadFromFile( "mytileset.png" ) )
+	if( !gTileTexture.loadFromFile( "Tileset/mytileset.png" ) )
 	{
 		printf( "Failed to load tile set texture!\n" );
 		success = false;
@@ -626,7 +626,7 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
     int x = 0, y = 0;
 
     //Open the map
-    std::ifstream map1( "xxm1.map" );
+    std::ifstream map1( "Map/xxm1.map" );
 
     //If the map couldn't be loaded
     if( map1.fail() )
@@ -688,7 +688,7 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 	}	
 		map1.close();
 		x = 0, y = 0;
-		std::ifstream map2( "xxm2.map" );
+		std::ifstream map2( "Map/xxm2.map" );
 		
 		if( map2.fail() )
     {
