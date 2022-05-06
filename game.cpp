@@ -12,8 +12,8 @@
 using namespace std;
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 1200;
+const int SCREEN_HEIGHT = 900;
 
 //The dimensions of the level
 const int LEVEL_WIDTH = 6400;
@@ -171,6 +171,7 @@ SDL_Renderer* gRenderer = NULL;
 LTexture gDotTexture;
 LTexture gTileTexture;
 LTexture gTextTexture;
+LTexture gStartScreen;
 
 TTF_Font *gFont = NULL;
 
@@ -489,7 +490,7 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow( "IITD GAME", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN );
+		gWindow = SDL_CreateWindow( "MAZEMANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
                 {
                     printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -546,6 +547,10 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
         printf( "Failed to load Angry Birds font! SDL_ttf Error: %s\n", TTF_GetError() );
         success = false;
     }
+    if(!gStartScreen.loadFromFile("Images/start.jpg")){
+		printf("Failed to load Start screen Texture!\n");
+		success = false;
+	}
 
 	//Load dot texture
 	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
@@ -605,6 +610,7 @@ void close( Tile* tiles[], Tile* tiles2[] )
 
 	//Free loaded images
 	gDotTexture.free();
+	gStartScreen.free();
 	gTileTexture.free();
 	Mix_FreeMusic( gMusic );
     gMusic = NULL;
@@ -837,6 +843,180 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
     return false;
 }
 
+
+void play (Tile* tileSet[], Tile* tileSet2[]) {
+
+	bool quit = false;
+	
+	SDL_Event e;
+
+			//The dot that will be moving around on the screen
+	Dot dot;
+
+			//Level camera
+	SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+	while(!quit){
+		while( SDL_PollEvent( &e ) != 0 )
+		{
+				
+				
+			//User requests quit
+			if(Mix_PlayingMusic()==0){
+				Mix_PlayMusic(gMusic, -1);
+			}
+			if( e.type == SDL_QUIT )
+			{
+				quit = true;
+			}
+			if(e.type == SDL_KEYDOWN){
+			
+
+				if(e.key.keysym.sym == SDLK_ESCAPE){
+						quit = true;
+				}
+				
+				if(e.key.keysym.sym == SDLK_s){
+						if( Mix_PausedMusic() == 1 )
+		                {
+		                    //Resume the music
+		                    Mix_ResumeMusic();
+		                }
+		                //If the music is playing
+		               
+					}
+				}
+			else if(e.key.keysym.sym == SDLK_m){
+				 Mix_HaltMusic();
+			}
+
+			//Handle input for the dot
+			dot.handleEvent( e );
+		}
+			
+			
+
+			//Move the dot
+		dot.move( tileSet, tileSet2 );
+		dot.setCamera( camera );
+
+			//Clear screen
+			
+			
+		SDL_RenderClear( gRenderer );
+			
+			
+			
+
+			//Render level
+			
+			
+		for( int i = 0; i < LAYER1_TOTAL_TILES; ++i )
+		{
+			tileSet[ i ]->render( camera );
+		}
+			
+		for( int i = 0; i < LAYER2_TOTAL_TILES; ++i )
+		{
+			if(tileSet2[i]->getType()==0){
+				continue;
+			}
+			else tileSet2[ i ]->render( camera );
+		}
+			
+			
+			 
+
+			//Render dot
+		dot.render( camera );
+					
+				//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
+		SDL_Color textColor = { 255,255, 255};
+		
+		//string s = "Score: " + to_string(dot.Score);
+		//cout << Score << endl;
+		gTextTexture.loadFromRenderedText( "ESC - Quit", textColor );
+
+		gTextTexture.render( 1100,  0 );
+		
+		gTextTexture.loadFromRenderedText( "S - Sound", textColor );
+
+		gTextTexture.render( 1100,  25 );
+
+		gTextTexture.loadFromRenderedText( "M - Mute", textColor );
+
+		gTextTexture.render( 1100,  50);
+		
+		string s = "SPEED : " + to_string(PlayerSpeed);
+		
+		gTextTexture.loadFromRenderedText( s, textColor );
+
+		gTextTexture.render( 5,  0);
+		
+		s = "X : " + to_string(player_xpos);
+		
+		gTextTexture.loadFromRenderedText( s, textColor );
+
+		gTextTexture.render( 5,  25);
+		
+		s = "Y : " + to_string(player_ypos);
+		
+		gTextTexture.loadFromRenderedText( s, textColor );
+
+		gTextTexture.render( 5,  50);
+		//Update screen
+		SDL_RenderPresent( gRenderer );	
+	}
+	
+}
+
+bool isPlaying = false;
+
+bool isGameQuit = false;
+
+void start(){
+	
+	
+	SDL_Event e;
+	while(1){
+		while( SDL_PollEvent( &e ) != 0 )
+		{
+			if(Mix_PlayingMusic()==0){
+				Mix_PlayMusic(gMusic, -1);
+			}
+			if( e.type == SDL_QUIT )
+			{
+				isGameQuit = true;
+				return;
+			}	
+			if(e.type == SDL_KEYDOWN){
+				if(e.key.keysym.sym == SDLK_ESCAPE){
+					isGameQuit = true;
+					return;
+				}
+				if(e.key.keysym.sym == SDLK_SPACE){
+					isPlaying = true;
+					return;
+				}
+			}
+		}
+		
+		/*SDL_BlitSurface( gHelloWorld, NULL, gScreenSurface, NULL );
+
+			//Update the surface
+		SDL_UpdateWindowSurface( gWindow );*/
+		SDL_Rect clip = {0,0,1200,904};
+
+		gStartScreen.render(0,0, &clip);
+		
+		SDL_RenderPresent( gRenderer );	
+
+		
+	}
+}
+
+
+
+
 int main( int argc, char* args[] )
 {
 	//Start up SDL and create window
@@ -857,122 +1037,11 @@ int main( int argc, char* args[] )
 		}
 		else
 		{	
-			//Main loop flag
-			bool quit = false;
+			start();
 
-			//Event handler
-			SDL_Event e;
-
-			//The dot that will be moving around on the screen
-			Dot dot;
-
-			//Level camera
-			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-
-			//While application is running
-			while( !quit )
-			{
-				//Handle events on queue
-				while( SDL_PollEvent( &e ) != 0 )
-				{
-					//User requests quit
-					if( e.type == SDL_QUIT )
-					{
-						quit = true;
-					}					
-					if(e.type == SDL_KEYDOWN){
-						if(e.key.keysym.sym == SDLK_ESCAPE){
-							quit = true;
-						} else
-						if(e.key.keysym.sym == SDLK_s){
-							if(Mix_PlayingMusic()==0){
-								Mix_PlayMusic(gMusic, -1);
-							}
-							else{
-								if( Mix_PausedMusic() == 1 )
-                                {
-                                    //Resume the music
-                                    Mix_ResumeMusic();
-                                }
-                                //If the music is playing
-                                else
-                                {
-                                    //Pause the music
-                                    Mix_PauseMusic();
-                                }
-							}
-						}
-					}else if(e.key.keysym.sym == SDLK_m){
-						 Mix_HaltMusic();
-					}
-
-					//Handle input for the dot
-					dot.handleEvent( e );
-				}
-
-				//Move the dot
-				dot.move( tileSet, tileSet2 );
-				dot.setCamera( camera );
-
-				//Clear screen
-				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-				SDL_RenderClear( gRenderer );
-
-				//Render level
-				for( int i = 0; i < LAYER1_TOTAL_TILES; ++i )
-				{
-					tileSet[ i ]->render( camera );
-				}
-				
-				for( int i = 0; i < LAYER2_TOTAL_TILES; ++i )
-				{
-					if(tileSet2[i]->getType()==0){
-						continue;
-					}
-					else tileSet2[ i ]->render( camera );
-				}
-
-				//Render dot
-				dot.render( camera );
-
-				SDL_Color textColor = { 255,255, 255};
-				
-				//string s = "Score: " + to_string(dot.Score);
-				//cout << Score << endl;
-				gTextTexture.loadFromRenderedText( "ESC - Quit", textColor );
-
-				gTextTexture.render( 550,  0 );
-				
-				gTextTexture.loadFromRenderedText( "S - Sound", textColor );
-
-				gTextTexture.render( 550,  25 );
-
-				gTextTexture.loadFromRenderedText( "M - Mute", textColor );
-
-				gTextTexture.render( 550,  50);
-				
-				
-				///
-				string s = "SPEED : " + to_string(PlayerSpeed);
-				
-				gTextTexture.loadFromRenderedText( s, textColor );
-
-				gTextTexture.render( 0,  0);
-				
-				s = "X : " + to_string(player_xpos);
-				
-				gTextTexture.loadFromRenderedText( s, textColor );
-
-				gTextTexture.render( 0,  25);
-				
-				s = "Y : " + to_string(player_ypos);
-				
-				gTextTexture.loadFromRenderedText( s, textColor );
-
-				gTextTexture.render( 0,  50);
-
-				//Update screen
-				SDL_RenderPresent( gRenderer );
+		
+			if(isPlaying && !isGameQuit){
+				play(tileSet, tileSet2);
 			}
 		}
 		
