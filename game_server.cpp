@@ -1,3 +1,5 @@
+/*This source code copyrighted by Lazy Foo' Productions (2004-2022)
+and may not be redistributed without written permission.*/
 
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
@@ -7,9 +9,22 @@
 #include <stdio.h>
 #include <string>
 #include <fstream>
-
+#include <string>
+#include <iostream>
 #include <bits/stdc++.h>
+
+
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#define PORT 8080
+
 using namespace std;
+
+
+
+Mix_Music *gMusic = NULL;
 
 //Screen dimension constants
 const int SCREEN_WIDTH = 1200;
@@ -27,16 +42,17 @@ const int LAYER2_TOTAL_TILES = 20000;
 
 const int TOTAL_TILE_SPRITES = 16384;
 
+
+
+
 int PlayerSpeed = 5;
 int player_xpos = 4448;
-int player_ypos = 32;
-bool hasBoosted = false;
+int player_ypos = 0;
 
 
-
-Mix_Music *gMusic = NULL;
 
 //The different tile sprites
+
 
 
 //Texture wrapper class
@@ -109,6 +125,8 @@ class Tile
 		int mType;
 };
 
+
+
 //The dot that will move around on the screen
 class Dot
 {
@@ -116,9 +134,12 @@ class Dot
 		//The dimensions of the dot
 		static const int DOT_WIDTH = 16;
 		static const int DOT_HEIGHT = 16;
-
+		string name = "";
+		
+		//static int Score = 0;
+		
 		//Maximum axis velocity of the dot
-		int DOT_VEL = 6;
+		 int DOT_VEL = 5;
 
 		//Initializes the variables
 		Dot();
@@ -141,6 +162,8 @@ class Dot
 
 		//The velocity of the dot
 		int mVelX, mVelY;
+		
+		
 };
 
 //Starts up SDL and creates window
@@ -167,14 +190,19 @@ SDL_Window* gWindow = NULL;
 //The window renderer
 SDL_Renderer* gRenderer = NULL;
 
+TTF_Font *gFont = NULL;
+
 //Scene textures
 LTexture gDotTexture;
 LTexture gTileTexture;
 LTexture gTextTexture;
 LTexture gStartScreen;
 LTexture gInstructionScreen;
+LTexture gInputTextTexture;
 
-TTF_Font *gFont = NULL;
+
+SDL_Surface* gScreenSurface = NULL;
+SDL_Surface* gHelloWorld = NULL;
 
 SDL_Rect gTileClips[ TOTAL_TILE_SPRITES ];
 
@@ -233,7 +261,7 @@ bool LTexture::loadFromFile( std::string path )
 	return mTexture != NULL;
 }
 
-#if defined(SDL_TTF_MAJOR_VERSION)
+
 bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor )
 {
 	//Get rid of preexisting texture
@@ -268,7 +296,7 @@ bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColo
 	//Return success
 	return mTexture != NULL;
 }
-#endif
+
 
 void LTexture::free()
 {
@@ -303,7 +331,7 @@ void LTexture::setAlpha( Uint8 alpha )
 void LTexture::render( int x, int y, SDL_Rect* clip, double angle, SDL_Point* center, SDL_RendererFlip flip )
 {
 	//Set rendering space and render to screen
-	SDL_Rect renderQuad = { x, y, mWidth,mHeight };
+	SDL_Rect renderQuad = { x, y, mWidth, mHeight };//xx
 
 	//Set clip rendering dimensions
 	if( clip != NULL )
@@ -400,8 +428,8 @@ void Dot::handleEvent( SDL_Event& e )
         }
     }
 }
-
-void Dot::move( Tile *tiles[] , Tile *tiles2[])
+bool hasBoosted = false;
+void Dot::move( Tile *tiles[], Tile *tiles2[] )
 {
     //Move the dot left or right
     mBox.x += mVelX;
@@ -424,7 +452,6 @@ void Dot::move( Tile *tiles[] , Tile *tiles2[])
         //move back
         mBox.y -= mVelY;
     }
-    
     if(!hasBoosted){
     for (int i=0;i<TOTAL_TILE_SPRITES;i++){
     	if (tiles2[i]->getType() <= 3670 && tiles2[i]->getType() >= 3668){
@@ -438,6 +465,8 @@ void Dot::move( Tile *tiles[] , Tile *tiles2[])
     
     }
     }
+    
+    
 }
 
 void Dot::setCamera( SDL_Rect& camera )
@@ -468,6 +497,8 @@ void Dot::setCamera( SDL_Rect& camera )
 void Dot::render( SDL_Rect& camera )
 {
     //Show the dot
+  
+    
 	gDotTexture.render( mBox.x - camera.x, mBox.y - camera.y );
 }
 
@@ -477,7 +508,7 @@ bool init()
 	bool success = true;
 
 	//Initialize SDL
-	if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0  )
+	if( SDL_Init( SDL_INIT_EVERYTHING < 0 ))
 	{
 		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
 		success = false;
@@ -491,19 +522,17 @@ bool init()
 		}
 
 		//Create window
-		gWindow = SDL_CreateWindow( "MAZEMANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		gWindow = SDL_CreateWindow( "MAZEMANIA", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
                 {
                     printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
                     success = false;
                 }
-                
         if( TTF_Init() == -1 )
                 {
                     printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
                     success = false;
                 }
-               
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -512,6 +541,8 @@ bool init()
 		else
 		{
 			//Create renderer for window
+			gScreenSurface = SDL_GetWindowSurface( gWindow );
+			
 			gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
 			if( gRenderer == NULL )
 			{
@@ -542,35 +573,51 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 	//Loading success flag
 	bool success = true;
 
+	//Load dot texture
 	gFont = TTF_OpenFont( "Fonts/AngryBirds.ttf", 20);
-	if( gFont == NULL )
-    {
-        printf( "Failed to load Angry Birds font! SDL_ttf Error: %s\n", TTF_GetError() );
-        success = false;
-    }
-    if(!gStartScreen.loadFromFile("Images/start.jpg")){
+	
+	
+	gHelloWorld = SDL_LoadBMP( "Images/start.jpg" );
+	//if( gHelloWorld == NULL )
+	//{
+	//	printf( "Unable to load image %s! SDL Error: %s\n", "startscreen.bmp", SDL_GetError() );
+	//	success = false;
+	//}
+	
+
+	if(!gStartScreen.loadFromFile("Images/start.jpg")){
 		printf("Failed to load Start screen Texture!\n");
 		success = false;
 	}
+	
 	if(!gInstructionScreen.loadFromFile("Images/instructions.jpg")){
 		printf("Failed to load Start screen Texture!\n");
 		success = false;
 	}
-
-	//Load dot texture
+	
 	if( !gDotTexture.loadFromFile( "Player/playern.png" ) )
 	{
-		printf( "Failed to load character texture!\n" );
+		printf( "Failed to load dot texture!\n" );
 		success = false;
 	}
-	
-	gMusic = Mix_LoadMUS( "Sounds/Fluffing-a-Duck.wav" );
+	 gMusic = Mix_LoadMUS( "Sounds/Fluffing-a-Duck.wav" );
     if( gMusic == NULL )
     {
         printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
         success = false;
     }
-	
+    if( gFont == NULL )
+    {
+        printf( "Failed to load Angry birds font! SDL_ttf Error: %s\n", TTF_GetError() );
+        success = false;
+    }
+   
+    /*if( !gStartScreen.loadFromFile("startscreen.jpg"))
+    {
+    	printf( "Failed to load Start Screen texture!\n" );
+		success = false;
+    }*/
+
 	//Load tile texture
 	if( !gTileTexture.loadFromFile( "Tileset/mytileset.png" ) )
 	{
@@ -609,17 +656,21 @@ void close( Tile* tiles[], Tile* tiles2[] )
 		 }
 	}
 
+	//Free loaded images
 	gTextTexture.free();
+	gInputTextTexture.free();
 	TTF_CloseFont( gFont );
     gFont = NULL;
-
-	//Free loaded images
+    
 	gDotTexture.free();
 	gStartScreen.free();
 	gInstructionScreen.free();
 	gTileTexture.free();
 	Mix_FreeMusic( gMusic );
     gMusic = NULL;
+    
+   //SDL_FreeSurface( gHelloWorld );
+	//gHelloWorld = NULL;
 
 	//Destroy window	
 	SDL_DestroyRenderer( gRenderer );
@@ -701,7 +752,6 @@ bool setTiles( Tile* tiles[] , Tile* tiles2[])
 		for( int i = 0; i < LAYER1_TOTAL_TILES; ++i )
 		{
 			//Determines what kind of tile will be made
-			
 			int tileType = -1;
 
 			//Read tile from map file
@@ -848,16 +898,20 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
     //If no wall tiles were touched
     return false;
 }
+string inputText = "NAME";
+bool isPlaying = false;
+bool isInstructions = false;
+bool isGameQuit = false;
+bool isBackToStart  = false;
 
-
-void play (Tile* tileSet[], Tile* tileSet2[]) {
+void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int new_socket, char buffer[], int valread) {
 
 	bool quit = false;
 	
 	SDL_Event e;
 
 			//The dot that will be moving around on the screen
-	Dot dot;
+	
 
 			//Level camera
 	SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
@@ -896,14 +950,14 @@ void play (Tile* tileSet[], Tile* tileSet2[]) {
 			}
 
 			//Handle input for the dot
-			dot.handleEvent( e );
+			dot1.handleEvent( e );
 		}
 			
 			
 
 			//Move the dot
-		dot.move( tileSet, tileSet2 );
-		dot.setCamera( camera );
+		dot1.move( tileSet, tileSet2 );
+		dot1.setCamera( camera );
 
 			//Clear screen
 			
@@ -933,7 +987,7 @@ void play (Tile* tileSet[], Tile* tileSet2[]) {
 			 
 
 			//Render dot
-		dot.render( camera );
+		dot1.render( camera );
 					
 				//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 		SDL_Color textColor = { 255,255, 255};
@@ -956,36 +1010,111 @@ void play (Tile* tileSet[], Tile* tileSet2[]) {
 		
 		gTextTexture.loadFromRenderedText( s, textColor );
 
-		gTextTexture.render( 5,  0);
+		gTextTexture.render( 5,  25);
 		
 		s = "X : " + to_string(player_xpos);
 		
 		gTextTexture.loadFromRenderedText( s, textColor );
 
-		gTextTexture.render( 5,  25);
+		gTextTexture.render( 5,  50);
 		
 		s = "Y : " + to_string(player_ypos);
 		
 		gTextTexture.loadFromRenderedText( s, textColor );
 
-		gTextTexture.render( 5,  50);
+		gTextTexture.render( 5,  75);
+		
+		s = inputText;
+		gTextTexture.loadFromRenderedText( s, textColor );
+
+		gTextTexture.render( 5,  0);
 		//Update screen
+		
+		
+		// Recieving the data over the socket
+		if(isPlaying){
+			valread = read(new_socket, buffer, 1024);
+			string data_name = buffer;
+			memset(buffer,0,1024);
+			
+			gTextTexture.loadFromRenderedText( data_name, textColor );
+			
+			gTextTexture.render( 5,  150);
+			
+			const char* data_name1 = s.c_str();
+			send(new_socket, data_name1, strlen(data_name1),0);
+			
+			
+			valread = read(new_socket, buffer, 1024);
+			string data_speed = buffer;
+			memset(buffer,0,1024);
+			
+			gTextTexture.loadFromRenderedText( "SPEED : ", textColor );
+			gTextTexture.render( 5,  175);
+			
+			gTextTexture.loadFromRenderedText( data_speed, textColor );
+			gTextTexture.render( 70,  175);
+			
+			const char* data_speed1 = to_string(PlayerSpeed).c_str();
+			send(new_socket, data_speed1, strlen(data_speed1),0);
+			
+			valread = read(new_socket, buffer, 1024);
+			string data_x = buffer;
+			memset(buffer,0,1024);
+			
+			gTextTexture.loadFromRenderedText( "X : ", textColor );
+			gTextTexture.render( 5,  200);
+			
+			gTextTexture.loadFromRenderedText( data_x, textColor );
+			gTextTexture.render( 30,  200);
+			
+			const char* data_x1 = to_string(player_xpos).c_str();
+			send(new_socket, data_x1, strlen(data_x1), 0);
+			
+			
+			valread = read(new_socket, buffer, 1024);
+			string data_y = buffer;
+			memset(buffer,0,1024);
+
+			gTextTexture.loadFromRenderedText( "X : ", textColor );
+			gTextTexture.render( 5,  225);
+			
+			gTextTexture.loadFromRenderedText( data_y, textColor );
+			gTextTexture.render( 30,  225);
+			
+			const char* data_y1 = to_string(player_ypos).c_str();
+			send(new_socket, data_y1, strlen(data_y1), 0);
+
+		}
+		
+		
+		
+		
+		
+		
 		SDL_RenderPresent( gRenderer );	
 	}
 	
 }
 
-bool isPlaying = false;
-bool isInstructions = false;
-bool isGameQuit = false;
-bool isBackToStart  = false;
 
-void start(){
+
+
+void start(Dot dot){
 	
 	bool wasMusic = false;
 	SDL_Event e;
 	isBackToStart = false;
+	
+	
+	SDL_Color textColor = { 255, 255, 255, 0xFF };
+	gInputTextTexture.loadFromRenderedText( inputText.c_str(), textColor );
+	SDL_StartTextInput();
+	
 	while(1){
+	
+		bool renderText = false;
+		
 		while( SDL_PollEvent( &e ) != 0 )
 		{
 			if(Mix_PlayingMusic()==0 && !wasMusic){
@@ -999,7 +1128,24 @@ void start(){
 			}	
 			if(e.type == SDL_KEYDOWN){
 			
-
+				if( e.key.keysym.sym == SDLK_BACKSPACE && inputText.length() > 0 )
+				{
+					//lop off character
+					inputText.pop_back();
+					renderText = true;
+				}
+				//Handle copy
+				else if( e.key.keysym.sym == SDLK_c && SDL_GetModState() & KMOD_CTRL )
+				{
+					SDL_SetClipboardText( inputText.c_str() );
+				}
+				//Handle paste
+				else if( e.key.keysym.sym == SDLK_v && SDL_GetModState() & KMOD_CTRL )
+				{
+					inputText = SDL_GetClipboardText();
+					renderText = true;
+				}
+				
 				if(e.key.keysym.sym == SDLK_ESCAPE){
 						isGameQuit = true;
 						return;
@@ -1025,12 +1171,38 @@ void start(){
 		               
 					}
 				}
+
 			else if(e.key.keysym.sym == SDLK_m){
 				 Mix_HaltMusic();
 				 wasMusic = false;
 			}
+								else if( e.type == SDL_TEXTINPUT )
+					{
+						//Not copy or pasting
+						if( !( SDL_GetModState() & KMOD_CTRL && ( e.text.text[ 0 ] == 'c' || e.text.text[ 0 ] == 'C' || e.text.text[ 0 ] == 'v' || e.text.text[ 0 ] == 'V' ) ) )
+						{
+							//Append character
+							inputText += e.text.text;
+							renderText = true;
+						}
+					}
 		}
 		
+		if( renderText )
+		{
+			//Text is not empty
+			if( inputText != "" )
+			{
+				//Render new text
+				gInputTextTexture.loadFromRenderedText( inputText.c_str(), textColor );
+			}
+			//Text is empty
+			else
+			{
+				//Render space texture
+				gInputTextTexture.loadFromRenderedText( " ", textColor );
+			}
+		}		
 		/*SDL_BlitSurface( gHelloWorld, NULL, gScreenSurface, NULL );
 
 			//Update the surface
@@ -1039,12 +1211,18 @@ void start(){
 
 		gStartScreen.render(0,0, &clip);
 		
+		//SDL_Rect inputClip = {0,0};
+		
+		gInputTextTexture.render(525,350);
+		
 		SDL_RenderPresent( gRenderer );	
 
 		
 	}
+	dot.name = inputText;
+	SDL_StopTextInput();
+	
 }
-
 
 void instructions() {
 	bool wasMusic = false;
@@ -1105,10 +1283,61 @@ void instructions() {
 		
 }
 
-
-
 int main( int argc, char* args[] )
 {
+	//Socket Implementation
+	
+	int server_fd, new_socket, valread;
+	struct sockaddr_in address;
+	int opt = 1;
+	int addrlen = sizeof(address);
+	char buffer[1024] = { 0 };
+	char* hello = "Hello from server";
+	
+	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0))
+		== 0) {
+		perror("socket failed");
+		exit(EXIT_FAILURE);
+	}
+
+	// Forcefully attaching socket to the port 8080
+	if (setsockopt(server_fd, SOL_SOCKET,
+				SO_REUSEADDR | SO_REUSEPORT, &opt,
+				sizeof(opt))) {
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(PORT);
+	
+	
+
+	// Forcefully attaching socket to the port 8080
+	if (bind(server_fd, (struct sockaddr*)&address,
+			sizeof(address))
+		< 0) {
+		perror("bind failed");
+		exit(EXIT_FAILURE);
+	}
+	if (listen(server_fd, 3) < 0) {
+		perror("listen");
+		exit(EXIT_FAILURE);
+	}
+	if ((new_socket
+		= accept(server_fd, (struct sockaddr*)&address,
+				(socklen_t*)&addrlen))
+		< 0) {
+		perror("accept");
+		exit(EXIT_FAILURE);
+	}
+	//valread = read(new_socket, buffer, 1024);
+	//printf("%s\n", buffer);
+	//send(new_socket, hello, strlen(hello), 0);
+	
+	//printf("Hello message sent\n");
+	
+	
 	//Start up SDL and create window
 	if( !init() )
 	{
@@ -1130,11 +1359,12 @@ int main( int argc, char* args[] )
 			
 			//Main loop flag
 			
+			Dot dot1, dot2;
 			
 			while(!isPlaying && !isGameQuit){
 			
-				start();
-
+				start(dot1);
+				
 				if(isInstructions && !isGameQuit && !isPlaying){
 					instructions();
 				}
@@ -1142,7 +1372,9 @@ int main( int argc, char* args[] )
 			
 			
 			if(isPlaying && !isGameQuit){
-				play(tileSet, tileSet2);
+				
+				play(tileSet, tileSet2, dot1, dot2, new_socket, buffer, valread);
+				
 			}
 			
 			
