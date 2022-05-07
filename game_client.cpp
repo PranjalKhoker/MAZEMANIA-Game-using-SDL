@@ -1,5 +1,4 @@
-/*This source code copyrighted by Lazy Foo' Productions (2004-2022)
-and may not be redistributed without written permission.*/
+
 
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
@@ -156,10 +155,11 @@ class Dot
 
 		//Shows the dot on the screen
 		void render( SDL_Rect& camera );
+		SDL_Rect mBox;
 
     private:
 		//Collision box of the dot
-		SDL_Rect mBox;
+		
 
 		//The velocity of the dot
 		int mVelX, mVelY;
@@ -196,6 +196,7 @@ TTF_Font *gFont = NULL;
 //Scene textures
 LTexture gDotTexture;
 LTexture gTileTexture;
+LTexture gDotOpponentTexture;
 LTexture gTextTexture;
 LTexture gStartScreen;
 LTexture gInstructionScreen;
@@ -601,6 +602,11 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 		printf( "Failed to load dot texture!\n" );
 		success = false;
 	}
+	if( !gDotOpponentTexture.loadFromFile( "Player/playern.png" ) )
+	{
+		printf( "Failed to load dot texture!\n" );
+		success = false;
+	}
 	 gMusic = Mix_LoadMUS( "Sounds/Fluffing-a-Duck.wav" );
     if( gMusic == NULL )
     {
@@ -664,6 +670,7 @@ void close( Tile* tiles[], Tile* tiles2[] )
     gFont = NULL;
     
 	gDotTexture.free();
+	gDotOpponentTexture.free();
 	gStartScreen.free();
 	gInstructionScreen.free();
 	gTileTexture.free();
@@ -989,6 +996,8 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int sock, char 
 
 			//Render dot
 		dot1.render( camera );
+		
+		
 					
 				//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 		SDL_Color textColor = { 255,255, 255};
@@ -1020,6 +1029,8 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int sock, char 
 		gTextTexture.render( 5,  50);
 		
 		s = "Y : " + to_string(player_ypos);
+		
+		
 		
 		gTextTexture.loadFromRenderedText( s, textColor );
 
@@ -1091,6 +1102,12 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int sock, char 
 			
 			gTextTexture.loadFromRenderedText( data_y1, textColor );
 			gTextTexture.render( 30,  225);
+			
+			int ox,oy;
+			ox = stoi(data_x1);
+			oy = stoi(data_y1);
+			
+			gDotOpponentTexture.render(ox-camera.x, oy-camera.y);
 		}
 		
 

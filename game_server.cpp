@@ -1,5 +1,4 @@
-/*This source code copyrighted by Lazy Foo' Productions (2004-2022)
-and may not be redistributed without written permission.*/
+
 
 //Using SDL, SDL_image, standard IO, strings, and file streams
 #include <SDL2/SDL.h>
@@ -198,6 +197,7 @@ LTexture gTileTexture;
 LTexture gTextTexture;
 LTexture gStartScreen;
 LTexture gInstructionScreen;
+LTexture gDotOpponentTexture;
 LTexture gInputTextTexture;
 
 
@@ -589,6 +589,10 @@ bool loadMedia( Tile* tiles[] , Tile* tiles2[])
 		printf("Failed to load Start screen Texture!\n");
 		success = false;
 	}
+	if(!gDotOpponentTexture.loadFromFile("Player/playern2.png")){
+		printf("Failed to load Start screen Texture!\n");
+		success = false;
+	}
 	
 	if(!gInstructionScreen.loadFromFile("Images/instructions.jpg")){
 		printf("Failed to load Start screen Texture!\n");
@@ -664,6 +668,7 @@ void close( Tile* tiles[], Tile* tiles2[] )
     
 	gDotTexture.free();
 	gStartScreen.free();
+	gDotOpponentTexture.free();
 	gInstructionScreen.free();
 	gTileTexture.free();
 	Mix_FreeMusic( gMusic );
@@ -988,7 +993,7 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int new_socket,
 
 			//Render dot
 		dot1.render( camera );
-					
+		
 				//SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 		SDL_Color textColor = { 255,255, 255};
 		
@@ -1084,6 +1089,12 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int new_socket,
 			
 			const char* data_y1 = to_string(player_ypos).c_str();
 			send(new_socket, data_y1, strlen(data_y1), 0);
+			
+			int ox,oy;
+			ox = stoi(data_x);
+			oy = stoi(data_y);
+			
+			gDotOpponentTexture.render(ox-camera.x, oy - camera.y);
 
 		}
 		
