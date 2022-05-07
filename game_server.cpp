@@ -1081,7 +1081,7 @@ void play (Tile* tileSet[], Tile* tileSet2[],Dot dot1, Dot dot2, int new_socket,
 			string data_y = buffer;
 			memset(buffer,0,1024);
 
-			gTextTexture.loadFromRenderedText( "X : ", textColor );
+			gTextTexture.loadFromRenderedText( "Y : ", textColor );
 			gTextTexture.render( 5,  225);
 			
 			gTextTexture.loadFromRenderedText( data_y, textColor );

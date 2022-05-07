@@ -1,0 +1,7 @@
+status:
+
+I failed to do the following things (before deadline)
+
+1. zoom in/out
+2. mini map
+
