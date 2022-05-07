@@ -1,4 +1,6 @@
-IITD GAME
+IITD GAME - MAZEMANIA (Developer - Pranjal Khoker)
+
+
 
 Installion of necessary Libraries to run the game- (IGNORE IF YOU HAVE SDL ALREADY INSTALLED ON YOUR SYSTEM) 
 
@@ -30,6 +32,12 @@ To run on two different Systems
 4. set the ip address of both server and client accordingly
 5. in one system, run ./server
 6. in other, run ./client
+
+Resources from where i learnt about SDL 
+1. lets make games youtube channel, link = https://www.youtube.com/c/CarlBirch
+2. lazyfoo website, link = https://lazyfoo.net/tutorials/SDL/index.php
+
+
 
 
 
